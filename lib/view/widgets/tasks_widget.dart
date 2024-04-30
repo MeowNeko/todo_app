@@ -80,7 +80,14 @@ class TodoWidget extends StatelessWidget {
                     ],
                   ),
                   child: ListTile(
-                    title: Text(currentTask.title),
+                    title: Text(
+                      currentTask.title,
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            decoration: currentTask.isChecked
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                    ),
                     trailing: IconButton(
                       padding: EdgeInsets.zero,
                       icon: Icon(

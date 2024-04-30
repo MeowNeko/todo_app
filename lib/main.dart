@@ -7,9 +7,7 @@ import 'package:todo_app/view/pages/edit_task_page.dart';
 import 'package:todo_app/view/pages/home_page.dart';
 import 'package:todo_app/view/pages/add_task_page.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
+void main() {
   runApp(
     MultiProvider(
       providers: [

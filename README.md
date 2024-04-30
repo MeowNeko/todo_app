@@ -1,7 +1,8 @@
 # To-do application
 
 A Simple Todo Application framework project.
-- Architecture used: MVC
+- Framework: Flutter
+- Architecture: MVC
 - State management: Provider
 
 ## License

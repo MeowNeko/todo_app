@@ -49,7 +49,7 @@ class HomePage extends StatelessWidget {
               const CategoriesWidget(),
 
               //CONTENT
-              const Text('TODAY\'S TASKS').space(),
+              const Text('ALL TASKS').space(),
               const TodoWidget(),
             ],
           ),
