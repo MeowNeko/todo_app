@@ -1,15 +1,17 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:todo_app/model/category_model.dart';
 
 class CategoriesController extends ChangeNotifier {
   final List<CategoryModel> _categoriesList;
+  final Box _box;
   int _currentIndex = 0;
 
   CategoriesController({
-    required List<CategoryModel> categoriesList,
-  }) : _categoriesList = categoriesList;
+    required Box<CategoryModel> box,
+  }) : _box = box, _categoriesList = box.values.toList();
 
   //CRUD
   UnmodifiableListView get categoriesList =>
@@ -19,20 +21,28 @@ class CategoriesController extends ChangeNotifier {
     if (_categoriesList.contains(CategoryModel(name: name))) {
       throw 'Category name is used';
     } else {
-      _categoriesList.add(CategoryModel(name: name));
+      final category = CategoryModel(name: name);
+
+      _categoriesList.add(category);
+      _box.add(category);
+
       notifyListeners();
     }
   }
 
   void update({required String name, required String newName}) {
+    final category = CategoryModel(name: newName);
+
     try {
-      if (_categoriesList.contains(CategoryModel(name: newName))) {
+      if (_categoriesList.contains(category)) {
         throw 'Category name is used';
       }
 
-      _categoriesList[_categoriesList.indexWhere(
-        (element) => element.name == name,
-      )] = CategoryModel(name: newName);
+      final index = _indexWhere(name);
+
+      _categoriesList[index] = category;
+      _box.putAt(index, category);
+
       notifyListeners();
     } catch (e) {
       if (e is String) {
@@ -48,6 +58,8 @@ class CategoriesController extends ChangeNotifier {
     _categoriesList.removeWhere(
       (element) => element == CategoryModel(name: name),
     );
+
+    _box.deleteAt(_currentIndex);
 
     if (_categoriesList.contains(currentModel)) {
       _currentIndex = _categoriesList.indexOf(currentModel);
@@ -66,7 +78,7 @@ class CategoriesController extends ChangeNotifier {
   String get currentName => _categoriesList[_currentIndex].name;
 
   CategoryModel get currentCategory => _categoriesList[_currentIndex];
-  
+
   bool get isEmpty => _categoriesList.isEmpty;
 
   void onChange(int index) {
@@ -75,8 +87,11 @@ class CategoriesController extends ChangeNotifier {
   }
 
   void onChangeName(String name) {
-    _currentIndex = _categoriesList.indexWhere((element) => element.name == name);
+    _currentIndex =
+        _categoriesList.indexWhere((element) => element.name == name);
     notifyListeners();
   }
 
+  int _indexWhere(String name) =>
+      _categoriesList.indexWhere((element) => element.name == name);
 }

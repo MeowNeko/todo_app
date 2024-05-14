@@ -17,11 +17,11 @@ class TaskModel extends Equatable {
   final DateTime _createdDateTime = DateTime.now();
 
   TaskModel({
-    required String category,
+    required CategoryModel category,
     required String title,
     String detail = '',
     bool isChecked = false,
-  })  : _category = CategoryModel(name: category),
+  })  : _category = category,
         _title = title,
         _detail = detail,
         _isChecked = isChecked;
@@ -54,13 +54,13 @@ class TaskModel extends Equatable {
   }
 
   TaskModel copyWith({
-    String? category,
+    CategoryModel? category,
     String? title,
     String? detail,
     bool? isChecked,
   }) {
     return TaskModel(
-      category: category ?? _category.name,
+      category: category ?? _category,
       title: title ?? _title,
       detail: detail ?? _detail,
       isChecked: isChecked ?? _isChecked,

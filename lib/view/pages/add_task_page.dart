@@ -3,6 +3,7 @@ import 'package:form_validator/form_validator.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app/controller/categories_controller.dart';
 import 'package:todo_app/controller/tasks_controller.dart';
+import 'package:todo_app/model/category_model.dart';
 import 'package:todo_app/view/extensions/general_extension.dart';
 
 class AddTaskPage extends StatefulWidget {
@@ -86,7 +87,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       final category =
                           context.read<CategoriesController>().currentName;
                       context.read<TasksController>().create(
-                            category: category,
+                            category: CategoryModel(name: category),
                             title: _titleController.text.trim(),
                             detail: _detailController.text.trim(),
                           );

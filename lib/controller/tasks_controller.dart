@@ -1,15 +1,18 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:todo_app/model/category_model.dart';
 import 'package:todo_app/model/task_model.dart';
 
 class TasksController extends ChangeNotifier {
   final List<TaskModel> _taskList;
+  final Box<TaskModel> _box;
   int _currentIndex = 0;
 
   TasksController({
-    required List<TaskModel> taskList,
-  }) : _taskList = taskList;
+    required Box<TaskModel> box,
+  })  : _box = box,
+        _taskList = box.values.toList();
 
   //CRUD
   UnmodifiableListView get taskList => UnmodifiableListView(_taskList);
@@ -19,23 +22,25 @@ class TasksController extends ChangeNotifier {
           _taskList.where((element) => element.category == category));
 
   void create({
-    required String category,
+    required CategoryModel category,
     required String title,
     String? detail = '',
   }) {
-    _taskList.add(
-      TaskModel(
-        category: category,
-        title: title,
-        detail: detail!,
-      ),
+    final task = TaskModel(
+      category: category,
+      title: title,
+      detail: detail!,
     );
+
+    _taskList.add(task);
+    _box.add(task);
+
     notifyListeners();
   }
 
   void update({
     required String hash,
-    String? name,
+    CategoryModel? category,
     String? title,
     String? detail,
     bool? isChecked,
@@ -43,11 +48,12 @@ class TasksController extends ChangeNotifier {
     try {
       final int index = _indexOfHash(hash);
       _taskList[index] = _taskList[index].copyWith(
-        category: name,
+        category: category,
         title: title,
         detail: detail,
         isChecked: isChecked,
       );
+      _box.putAt(index, _taskList[index]);
       notifyListeners();
     } catch (e) {
       throw 'NOT FOUND';
@@ -55,7 +61,9 @@ class TasksController extends ChangeNotifier {
   }
 
   void delete(String hash) {
-    _taskList.removeWhere((element) => element.hash == hash);
+    final index = _indexOfHash(hash);
+    _taskList.removeAt(index);
+    _box.deleteAt(index);
     notifyListeners();
   }
 
@@ -69,7 +77,22 @@ class TasksController extends ChangeNotifier {
   }
 
   void deleteSelected(CategoryModel category) {
-    _taskList.removeWhere((element) => element.category == category);
+    final List<TaskModel> targets = [];
+
+    _taskList.where((element) {
+      targets.add(element);
+      return true;
+    });
+
+    _taskList.removeWhere((element) {
+      if (targets.contains(element)) {
+        _box.deleteAt(_taskList.indexOf(element));
+        return true;
+      }
+
+      return false;
+    });
+
     notifyListeners();
   }
 
@@ -85,6 +108,7 @@ class TasksController extends ChangeNotifier {
       _taskList[index] = _taskList[index].copyWith(
         isChecked: !_taskList[index].isChecked,
       );
+      _box.putAt(index, _taskList[index]);
       notifyListeners();
     } catch (e) {
       throw 'NOT FOUND';
