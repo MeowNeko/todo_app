@@ -4,7 +4,11 @@ import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 import 'package:todo_app/model/category_model.dart';
+import 'package:hive/hive.dart';
 
+part 'task_model.g.dart';
+
+@HiveType(typeId: 1)
 class TaskModel extends Equatable {
   final CategoryModel _category;
   final String _title;
@@ -23,18 +27,20 @@ class TaskModel extends Equatable {
         _isChecked = isChecked;
 
   String _hash() {
-    var bytes = utf8.encode("$_category:$_title:$_detail:$isChecked:$_createdDateTime");
+    var bytes =
+        utf8.encode("$_category:$_title:$_detail:$isChecked:$_createdDateTime");
     return sha256.convert(bytes).toString();
   }
 
   String get hash => _hash();
 
+  @HiveField(0)
   CategoryModel get category => _category;
-
+  @HiveField(1)
   String get title => _title;
-
+  @HiveField(2)
   String get detail => _detail;
-
+  @HiveField(3)
   bool get isChecked => _isChecked;
 
   DateTime get createdDateTime => _createdDateTime;
