@@ -25,7 +25,7 @@ class TasksController extends ChangeNotifier {
   }) {
     _taskList.add(
       TaskModel(
-        category: category,
+        category: CategoryModel(name: category),
         title: title,
         detail: detail!,
       ),
@@ -35,7 +35,7 @@ class TasksController extends ChangeNotifier {
 
   void update({
     required String hash,
-    String? name,
+    CategoryModel? category,
     String? title,
     String? detail,
     bool? isChecked,
@@ -43,7 +43,7 @@ class TasksController extends ChangeNotifier {
     try {
       final int index = _indexOfHash(hash);
       _taskList[index] = _taskList[index].copyWith(
-        category: name,
+        category: category,
         title: title,
         detail: detail,
         isChecked: isChecked,

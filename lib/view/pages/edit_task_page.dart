@@ -3,6 +3,7 @@ import 'package:form_validator/form_validator.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app/controller/categories_controller.dart';
 import 'package:todo_app/controller/tasks_controller.dart';
+import 'package:todo_app/model/category_model.dart';
 import 'package:todo_app/model/task_model.dart';
 import 'package:todo_app/view/extensions/general_extension.dart';
 
@@ -89,7 +90,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
                     onPressed: () {
                       context.read<TasksController>().update(
                             hash: _task.hash,
-                            name: _currentCategory,
+                            category: CategoryModel(name: _currentCategory),
                             title: _titleController.text.trim(),
                             detail: _detailController.text.trim(),
                           );
