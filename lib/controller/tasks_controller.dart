@@ -1,5 +1,7 @@
 import 'dart:collection';
+
 import 'package:flutter/material.dart';
+import 'package:todo_app/core/databases/database_helper.dart';
 import 'package:todo_app/model/category_model.dart';
 import 'package:todo_app/model/task_model.dart';
 
@@ -16,46 +18,53 @@ class TasksController extends ChangeNotifier {
 
   UnmodifiableListView currentTaskList(CategoryModel category) =>
       UnmodifiableListView(
-          _taskList.where((element) => element.category == category));
+        _taskList.where((element) => element.categoryId == category.id),
+      );
 
-  void create({
-    required String category,
+  Future<void> create({
+    required int categoryId,
     required String title,
     String? detail = '',
-  }) {
-    _taskList.add(
-      TaskModel(
-        category: CategoryModel(name: category),
-        title: title,
-        detail: detail!,
-      ),
+  }) async {
+    final TaskModel taskModel = TaskModel(
+      categoryId: categoryId,
+      title: title,
+      detail: detail!,
     );
+
+    final int id = await DatabaseHelper.addTask(taskModel);
+    _taskList.add(taskModel.copyWith(id: id));
+
     notifyListeners();
   }
 
-  void update({
+  Future<void> update({
     required String hash,
-    CategoryModel? category,
+    required int categoryId,
     String? title,
     String? detail,
     bool? isChecked,
-  }) {
+  }) async {
     try {
       final int index = _indexOfHash(hash);
+
       _taskList[index] = _taskList[index].copyWith(
-        category: category,
+        categoryId: categoryId,
         title: title,
         detail: detail,
         isChecked: isChecked,
       );
+      await DatabaseHelper.updateTask(_taskList[index]);
+
       notifyListeners();
     } catch (e) {
       throw 'NOT FOUND';
     }
   }
 
-  void delete(String hash) {
-    _taskList.removeWhere((element) => element.hash == hash);
+  Future<void> delete({required TaskModel task}) async {
+    _taskList.removeWhere((element) => element == task);
+    await DatabaseHelper.deleteTask(task);
     notifyListeners();
   }
 
@@ -68,23 +77,27 @@ class TasksController extends ChangeNotifier {
     _currentIndex = _taskList.indexWhere((element) => element.hash == hash);
   }
 
-  void deleteSelected(CategoryModel category) {
-    _taskList.removeWhere((element) => element.category == category);
+  Future<void> deleteCategorySelected(CategoryModel category) async {
+    await DatabaseHelper.deleteTaskWhere(category);
+    _taskList.removeWhere((element) => element.categoryId == category.id);
     notifyListeners();
   }
 
-  int lengthSelected(CategoryModel currentCategory) => _taskList
-      .where(
-        (element) => element.category == currentCategory,
-      )
-      .length;
+  int lengthCategorySelected(CategoryModel currentCategory) {
+    return _taskList
+        .where(
+          (element) => element.categoryId == currentCategory.id,
+        )
+        .length;
+  }
 
-  void toggle(String hash) {
+  Future<void> toggle(String hash) async {
     try {
       final int index = _indexOfHash(hash);
       _taskList[index] = _taskList[index].copyWith(
         isChecked: !_taskList[index].isChecked,
       );
+      await DatabaseHelper.updateTask(_taskList[index]);
       notifyListeners();
     } catch (e) {
       throw 'NOT FOUND';

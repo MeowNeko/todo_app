@@ -8,11 +8,7 @@ class DatabaseHelper {
   static const String _databaseName = "Todo.db";
   static const int _databaseVersion = 1;
 
-  static Future<void> clear() async {
-    await databaseFactory
-        .deleteDatabase(join(await getDatabasesPath(), _databaseName));
-  }
-
+  //General
   static Future<Database> _initDatabase() async {
     return await openDatabase(
       join(await getDatabasesPath(), _databaseName),
@@ -25,16 +21,22 @@ class DatabaseHelper {
           //IF NOT EXISTS (optional addi.)
           '''CREATE TABLE Task (
           id INTEGER PRIMARY KEY,
-          category_id INTEGER,
+          category_id INTEGER NOT NULL,
           title TEXT NOT NULL,
           detail TEXT NOT NULL,
-          isChecked BOOLEAN DEFAULT "FALSE",
+          is_checked BOOLEAN DEFAULT 0,
+          created_datetime TEXT NOT NULL,
           FOREIGN KEY (category_id) REFERENCES Category(id)
         )''',
-        );
+        ); //BOOLEAN IS NOT SUPPORTED (INTEGER INSTEAD) - https://github.com/tekartik/sqflite/blob/master/sqflite/doc/supported_types.md
       },
       version: _databaseVersion,
     );
+  }
+
+  static Future<void> clear() async {
+    await databaseFactory
+        .deleteDatabase(join(await getDatabasesPath(), _databaseName));
   }
 
   //Category
@@ -77,7 +79,9 @@ class DatabaseHelper {
     }
 
     return List.generate(
-        maps.length, (index) => CategoryModel.fromMap(maps[index]));
+      maps.length,
+      (index) => CategoryModel.fromMap(maps[index]),
+    );
   }
 
   //Task
@@ -107,6 +111,15 @@ class DatabaseHelper {
       "Task",
       where: 'id = ?',
       whereArgs: [taskModel.id],
+    );
+  }
+
+  static Future<int> deleteTaskWhere(CategoryModel categoryModel) async {
+    final Database db = await _initDatabase();
+    return await db.delete(
+      "Task",
+      where: 'category_id = ?',
+      whereArgs: [categoryModel.id],
     );
   }
 

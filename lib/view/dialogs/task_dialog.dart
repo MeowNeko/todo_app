@@ -54,11 +54,15 @@ class TaskDialog {
               ),
             ),
             InkWell(
-              onTap: () {
+              onTap: () async {
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                context.read<TasksController>().delete(task.hash);
-                _snackbar(context, 'Task deleted', Colors.orange);
-                Navigator.pop(context);
+
+                await context.read<TasksController>().delete(task: task);
+
+                if (context.mounted) {
+                  _snackbar(context, 'Task deleted', Colors.orange);
+                  Navigator.pop(context);
+                }
               },
               child: Card(
                 semanticContainer: true,

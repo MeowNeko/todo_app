@@ -25,13 +25,16 @@ class CategoriesWidget extends StatelessWidget {
             itemBuilder: (context, index) {
               final bool isSelected = controller.currentIndex == index;
               return InkWell(
-                onLongPress: () => showDialog(
-                  context: context,
-                  builder: (context) => CategoryDialog.general(
-                    context,
-                    controller.categoriesList[index].name,
-                  ),
-                ),
+                onLongPress: () {
+                  controller.onChange(index);
+                  showDialog(
+                    context: context,
+                    builder: (context) => CategoryDialog.general(
+                      context,
+                      controller.categoriesList[index],
+                    ),
+                  );
+                },
                 onTap: () => controller.onChange(index),
                 splashColor: Colors.transparent,
                 child: Card(
@@ -40,7 +43,7 @@ class CategoriesWidget extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Text(
-                        '${controller.categoriesList[index].name}',
+                        controller.categoriesList[index].name,
                         style: Theme.of(context)
                             .textTheme
                             .bodyLarge!

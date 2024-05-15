@@ -21,9 +21,11 @@ class CategoryModel extends Equatable {
   String get name => _name;
 
   CategoryModel copyWith({
+    int? id,
     String? name,
   }) {
     return CategoryModel(
+      id: id ?? _id,
       name: name ?? _name,
     );
   }

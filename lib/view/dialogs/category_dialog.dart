@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app/controller/categories_controller.dart';
 import 'package:todo_app/controller/tasks_controller.dart';
+import 'package:todo_app/model/category_model.dart';
 import 'package:todo_app/view/extensions/general_extension.dart';
 
 class CategoryDialog {
@@ -29,18 +30,28 @@ class CategoryDialog {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
               if (_text.isEmpty) {
                 _snackbar(context, 'Category name is required', Colors.red);
               } else {
                 try {
-                  context.read<CategoriesController>().create(name: _text);
+                  await context
+                      .read<CategoriesController>()
+                      .create(name: _text);
+
                   _text = '';
-                  _snackbar(context, 'New category created', Colors.green);
-                  Navigator.pop(context);
+                  if (context.mounted) {
+                    _snackbar(context, 'New category created', Colors.green);
+                  }
                 } catch (e) {
-                  _snackbar(context, '$e', Colors.orange);
+                  if (context.mounted) {
+                    _snackbar(context, '$e', Colors.orange);
+                  }
+                }
+                if (context.mounted) {
+                  Navigator.pop(context);
                 }
               }
             },
@@ -49,9 +60,11 @@ class CategoryDialog {
         ],
       );
 
-  static AlertDialog general(BuildContext context, String name) => AlertDialog(
+  static AlertDialog general(
+          BuildContext context, CategoryModel categoryModel) =>
+      AlertDialog(
         title: Text(
-          'Category: $name',
+          'Category: ${categoryModel.name}',
           textAlign: TextAlign.center,
         ),
         content: Column(
@@ -61,7 +74,7 @@ class CategoryDialog {
             InkWell(
               onTap: () => showDialog(
                 context: context,
-                builder: (context) => edit(context, name),
+                builder: (context) => edit(context, categoryModel),
               ),
               child: Card(
                 semanticContainer: true,
@@ -71,14 +84,30 @@ class CategoryDialog {
               ),
             ),
             InkWell(
-              onTap: () {
-                context.read<TasksController>().deleteSelected(
+              onTap: () async {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+                await context.read<TasksController>().deleteCategorySelected(
                     context.read<CategoriesController>().currentCategory);
-                    if (context.read<CategoriesController>().isEmpty) {
-                      
-                    }
-                context.read<CategoriesController>().delete(name: name);
-                Navigator.pop(context);
+
+                if (context.mounted) {
+                  if (context.read<CategoriesController>().isEmpty) {
+                    _snackbar(context, 'Category not found', Colors.orange);
+                  }
+
+                  await context
+                      .read<CategoriesController>()
+                      .delete(category: categoryModel);
+
+                  if (context.mounted) {
+                    _snackbar(
+                      context,
+                      'Category ${categoryModel.name} deleted',
+                      Colors.blue,
+                    );
+                    Navigator.pop(context);
+                  }
+                }
               },
               child: Card(
                 semanticContainer: true,
@@ -91,8 +120,9 @@ class CategoryDialog {
         ),
       );
 
-  static AlertDialog edit(BuildContext context, String name) => AlertDialog(
-        title: Text('Category: $name'),
+  static AlertDialog edit(BuildContext context, CategoryModel categoryModel) =>
+      AlertDialog(
+        title: Text('Category: ${categoryModel.name}'),
         content: TextField(
           decoration: const InputDecoration(
             hintText: 'new name',
@@ -112,21 +142,30 @@ class CategoryDialog {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
               if (_current.isEmpty) {
                 _snackbar(context, 'Category name is required', Colors.red);
               } else {
                 try {
-                  context
-                      .read<CategoriesController>()
-                      .update(name: name, newName: _current);
+                  await context.read<CategoriesController>().update(
+                        category: categoryModel,
+                        newName: _current,
+                      );
                   _text = '';
-                  _snackbar(context, 'Category name updated', Colors.green);
+                  if (context.mounted) {
+                    _snackbar(context, 'Category name updated', Colors.green);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    _snackbar(context, '$e', Colors.orange);
+                  }
+                }
+
+                if (context.mounted) {
                   Navigator.pop(context); //Current Dialog
                   Navigator.pop(context); //Previous Dialog
-                } catch (e) {
-                  _snackbar(context, '$e', Colors.orange);
                 }
               }
             },

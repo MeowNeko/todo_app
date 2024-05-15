@@ -5,44 +5,39 @@ import 'package:crypto/crypto.dart';
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 
-import 'package:todo_app/model/category_model.dart';
-
 class TaskModel extends Equatable {
   final int? _id;
-  final int? _categoryId;
-  final CategoryModel _category;
+  final int _categoryId;
   final String _title;
   final String _detail;
   final bool _isChecked;
-  final DateTime _createdDateTime = DateTime.now();
+  final DateTime _createdDateTime;
 
   TaskModel({
     int? id,
-    int? categoryId,
-    required CategoryModel category,
+    required int categoryId,
     required String title,
     String detail = '',
     bool isChecked = false,
+    DateTime? createdDateTime,
   })  : _id = id,
         _categoryId = categoryId,
-        _category = category,
         _title = title,
         _detail = detail,
-        _isChecked = isChecked;
+        _isChecked = isChecked,
+        _createdDateTime = createdDateTime ?? DateTime.now();
 
   String _hash() {
-    var bytes =
-        utf8.encode("$_category:$_title:$_detail:$isChecked:$_createdDateTime");
+    var bytes = utf8
+        .encode("$_categoryId:$_title:$_detail:$isChecked:$_createdDateTime");
     return sha256.convert(bytes).toString();
   }
 
   int? get id => _id;
 
-  int? get categoryId => _categoryId;
+  int get categoryId => _categoryId;
 
   String get hash => _hash();
-
-  CategoryModel get category => _category;
 
   String get title => _title;
 
@@ -61,13 +56,15 @@ class TaskModel extends Equatable {
   }
 
   TaskModel copyWith({
-    CategoryModel? category,
+    int? id,
+    int? categoryId,
     String? title,
     String? detail,
     bool? isChecked,
   }) {
     return TaskModel(
-      category: category ?? _category,
+      id: id ?? _id,
+      categoryId: categoryId ?? _categoryId,
       title: title ?? _title,
       detail: detail ?? _detail,
       isChecked: isChecked ?? _isChecked,
@@ -83,19 +80,20 @@ class TaskModel extends Equatable {
       'id': _id,
       'category_id': _categoryId,
       'title': _title,
-      'detail': _detail,
-      'isChecked': _isChecked,
+      'detail': _detail, //Avoid error
+      'is_checked': _isChecked ? 1 : 0,
+      'created_datetime': _createdDateTime.toIso8601String(),
     };
   }
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
     return TaskModel(
-      id: map['id'] != null ? map['id'] as int : null,
-      categoryId: map['category_id'] != null ? map['category_id'] as int : null,
-      category: CategoryModel.fromMap(map['category'] as Map<String, dynamic>),
+      id: map['id'] as int,
+      categoryId: map['category_id'] as int,
       title: map['title'] as String,
       detail: map['detail'] as String,
-      isChecked: map['isChecked'] as bool,
+      isChecked: (map['is_checked'] as int).isOdd, //1 => Odd, 0 => Even
+      createdDateTime: DateTime.parse(map['created_datetime']),
     );
   }
 

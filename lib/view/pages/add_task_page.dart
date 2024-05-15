@@ -19,13 +19,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final _titleValidator =
       ValidationBuilder().minLength(1).maxLength(200).build();
 
+  bool _added = false;
+
   // ignore: unused_field
-  String _currentCategory = ''; //It used in dropdownformfield
+  String _currentCategory = ''; //Used in dropdownformfield
+  late final String _previousCategory;
 
   @override
   void initState() {
     super.initState();
-    _currentCategory = context.read<CategoriesController>().currentName;
+    _previousCategory =
+        _currentCategory = context.read<CategoriesController>().currentName;
   }
 
   @override
@@ -37,71 +41,81 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('New Task'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SingleChildScrollView(
-            child: Form(
-              autovalidateMode: AutovalidateMode.always,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Consumer<CategoriesController>(
-                    builder: (_, controller, __) => DropdownButtonFormField(
-                      value: controller.currentName,
-                      items: List.generate(
-                        controller.length,
-                        (index) => DropdownMenuItem(
-                          value:
-                              (controller.categoriesList[index].name as String),
-                          child: Text(controller.categoriesList[index].name),
+    return PopScope(
+      onPopInvoked: (_) {
+        if (!_added) {
+          context.read<CategoriesController>().onChangeName(_previousCategory);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text('New Task'),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SingleChildScrollView(
+              child: Form(
+                autovalidateMode: AutovalidateMode.always,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Consumer<CategoriesController>(
+                      builder: (_, controller, __) => DropdownButtonFormField(
+                        value: controller.currentName,
+                        items: List.generate(
+                          controller.length,
+                          (index) => DropdownMenuItem(
+                            value: controller.categoriesList[index].name,
+                            child: Text(controller.categoriesList[index].name),
+                          ),
                         ),
-                      ),
-                      onChanged: (value) {
-                        _currentCategory = value ?? '';
-                        controller.onChangeName(value ?? '');
-                      },
+                        onChanged: (value) {
+                          _currentCategory = value ?? '';
+                          controller.onChangeName(value ?? '');
+                        },
+                      ).space(),
+                    ),
+                    TextFormField(
+                      decoration:
+                          const InputDecoration().copyWith(hintText: 'title*'),
+                      controller: _titleController,
+                      validator: _titleValidator,
                     ).space(),
-                  ),
-                  TextFormField(
-                    decoration:
-                        const InputDecoration().copyWith(hintText: 'title*'),
-                    controller: _titleController,
-                    validator: _titleValidator,
-                  ).space(),
-                  TextFormField(
-                    maxLength: 250,
-                    maxLines: null,
-                    decoration:
-                        const InputDecoration().copyWith(hintText: 'detail'),
-                    controller: _detailController,
-                  ).space(),
-                  ElevatedButton(
-                    onPressed: () {
-                      final category =
-                          context.read<CategoriesController>().currentName;
-                      context.read<TasksController>().create(
-                            category: category,
-                            title: _titleController.text.trim(),
-                            detail: _detailController.text.trim(),
+                    TextFormField(
+                      maxLength: 250,
+                      maxLines: null,
+                      decoration:
+                          const InputDecoration().copyWith(hintText: 'detail'),
+                      controller: _detailController,
+                    ).space(),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final category =
+                            context.read<CategoriesController>().currentId;
+                        await context.read<TasksController>().create(
+                              categoryId: category,
+                              title: _titleController.text.trim(),
+                              detail: _detailController.text.trim(),
+                            );
+
+                        if (context.mounted) {
+                          _added = true;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              showCloseIcon: true,
+                              backgroundColor: Colors.green,
+                              content: Text('New task added'),
+                            ),
                           );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          showCloseIcon: true,
-                          backgroundColor: Colors.green,
-                          content: Text('New task added'),
-                        ),
-                      );
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Submit'),
-                  ),
-                ],
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

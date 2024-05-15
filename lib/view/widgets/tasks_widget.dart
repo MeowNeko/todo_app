@@ -13,30 +13,23 @@ class TodoWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Consumer<TasksController>(
-        builder: (_, controller, __) {
-          if (controller.length <= 0 ||
-              controller.lengthSelected(
-                      context.read<CategoriesController>().currentCategory) <=
-                  0) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/happy_sun.png',
-                    height: 200,
-                  ),
-                  const Text('No task found'),
-                ],
-              ),
-            );
+        builder: (context, controller, __) {
+          try {
+            if (controller.length <= 0 ||
+                controller.lengthCategorySelected(
+                        context.read<CategoriesController>().currentCategory) <=
+                    0) {
+              return const _NoTask();
+            }
+          } catch (e) {
+            //Catch error on currentcategory during category deletion
+            return const _NoTask();
           }
 
           return ListView.builder(
             shrinkWrap: true,
-            itemCount: controller.lengthSelected(
-              context.watch<CategoriesController>().currentCategory,
-            ),
+            itemCount: controller.lengthCategorySelected(
+                context.watch<CategoriesController>().currentCategory),
             itemBuilder: (context, index) {
               final category =
                   context.read<CategoriesController>().currentCategory;
@@ -69,8 +62,8 @@ class TodoWidget extends StatelessWidget {
                           topRight: Radius.circular(10),
                           bottomRight: Radius.circular(10),
                         ),
-                        onPressed: (context) {
-                          controller.delete(currentTask.hash);
+                        onPressed: (context) async {
+                          await controller.delete(task: currentTask);
                         },
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -95,7 +88,8 @@ class TodoWidget extends StatelessWidget {
                             ? Icons.check_box_outlined
                             : Icons.check_box_outline_blank_rounded,
                       ),
-                      onPressed: () => controller.toggle(currentTask.hash),
+                      onPressed: () async =>
+                          controller.toggle(currentTask.hash),
                     ),
                   ),
                 ),
@@ -103,6 +97,26 @@ class TodoWidget extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _NoTask extends StatelessWidget {
+  const _NoTask();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/happy_sun.png',
+            height: 200,
+          ),
+          const Text('No task found'),
+        ],
       ),
     );
   }
