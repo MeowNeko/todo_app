@@ -4,6 +4,7 @@ A Simple Todo Application framework project.
 - Framework: Flutter
 - Architecture: MVC
 - State management: Provider
+- Local Storage: Sqlflite
 
 ## License
 
